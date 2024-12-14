@@ -60,7 +60,7 @@ async function scheduleTimer({
   const allDataJson = await allDataFetch.json();
   let startDateText = allDataJson.lessons[0].semester.startDate;
   let startDateTmp = new Date(startDateText);
-  currentSemesterInfo.startDate = startDateTmp.getTime();
+  currentSemesterInfo.startDate = startDateTmp.getTime().toString();
 
   /* 获取课表ID和总周数 */
   currentSemesterInfo.totalWeek = allDataJson.weekIndices.length;
