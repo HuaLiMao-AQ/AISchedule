@@ -148,22 +148,51 @@ function scheduleHtmlParser(html) {
   //可使用正则匹配
   //可使用解析dom匹配，工具内置了$，跟jquery使用方法一样，直接用就可以了，参考：https://cnodejs.org/topic/5203a71844e76d216a727d2e
   let allCourseJson = JSON.parse(html);
-  let result = [];
+  let timeTable = allCourseJson.courseUnitList;
+  let scheduleTableDatumResult = allCourseJson.scheduleTableDatumResult;
+  
+  /* 匹配课程名称 */
+  let courseName = {};
+  scheduleTableDatumResult.lessonList.forEach((courseInfo) => {
+    courseName[courseInfo.id] = courseInfo.courseName;
+  })
 
-  allCourseJson.forEach((course) => {
-    console.log(course.name);
-    let detaildInfo = parseDetaildInfo(course.info);
-    detaildInfo.forEach((Info) => {
-      result.push({
-        name: course.name,
-        position: Info.position,
-        teacher: Info.teacher,
-        day: Info.day,
-        sections: Info.sections,
-        weeks: Info.weeks
-      })
+  /* 匹配课程信息 */
+  let totalCourseInfo = [];
+  scheduleTableDatumResult.scheduleList.forEach((courseInfo) => {
+    let course = {};
+    course["name"] = courseName[courseInfo.lessonId];
+    course["position"] = courseInfo.room == null ? "" : courseInfo.room.nameZh;
+    course["teacher"] = courseInfo.personName;
+    course["day"] = courseInfo.weekday;
+    course["weeks"] = [courseInfo.weekIndex];
+    timeTable.forEach((section) => {
+      if (courseInfo.startTime == section.startTime)
+      {
+        course["start"] = section.indexNo;
+        return;
+      }
     })
-  });
+    timeTable.forEach((section) => {
+      if (courseInfo.endTime == section.endTime)
+      {
+        course["end"] = section.indexNo;
+        return;
+      }
+    })
+    console.log(course["start"] + " " + course["end"])
+    course["sections"] = [];
+    for (let i = course["start"]; i <= course["end"]; i++) course["sections"].push(i);
 
-  return result
+    totalCourseInfo.push({
+      name: course.name,
+      position: course.position,
+      teacher: course.teacher,
+      weeks: course.weeks,
+      day: course.day,
+      sections: course.sections
+    });
+  })
+
+  return totalCourseInfo;
 }
